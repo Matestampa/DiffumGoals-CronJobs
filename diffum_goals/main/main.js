@@ -96,9 +96,10 @@ async function main_diffumProcess(){
 
 	if (error){
 		errorLogger.error(error);
+		return;
 	}
 
-	let {mode,descr}=evaluate(retry_data)
+	let {mode,descr}=evaluate(data);
 
 	console.log(`=========== Diffum Process Running Mode : ${mode} - ${descr} ============`)
 
