@@ -7,7 +7,7 @@ const {GLOBAL_ACTIONS}=require("../actions");
 const {mainNormal} = require("./mainNormal.js")
 const {mainRetry} = require("./mainRetry.js");
 
-const {errorLogger} = require("../../logs/loggers.js");
+const {errorLogger,infoLogger} = require("../../logs/loggers.js");
 
 
 // Maintenance window (GMT-3) when normal runs are allowed if there are no failed goals
@@ -101,7 +101,7 @@ async function main_diffumProcess(){
 
 	let {mode,descr}=evaluate(data);
 
-	console.log(`=========== Diffum Process Running Mode : ${mode} - ${descr} ============`)
+	infoLogger.info(`=========== Diffum Process Running Mode : ${mode} - ${descr} ============`);
 
 	if (mode=="NORMAL"){
 		
