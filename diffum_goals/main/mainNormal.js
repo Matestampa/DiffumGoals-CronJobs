@@ -12,7 +12,7 @@ const {errorHandler} =require("../core/errorHandler.js");
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 
-const BATCH_SIZE=5;
+const BATCH_SIZE=10;
 
 
 async function mainNormal() {
@@ -29,6 +29,7 @@ async function mainNormal() {
 	//--------------------------------------------------------------
 
 	let nextCursor= null
+	let totalProcessedGoals=0;
 
 	do {
 		let getFromDb_res = await BATCH_ACTIONS.GET_FROM_DB.func("PAGINATION", {nextCursor: nextCursor, limit: BATCH_SIZE}, {expired: false});
@@ -44,6 +45,8 @@ async function mainNormal() {
         nextCursor = getFromDb_res.ok.pagination.nextCursor;
         let goalsData = getFromDb_res.ok.data;
 		let total_batchGoals = goalsData.length;
+
+		totalProcessedGoals += total_batchGoals;
 
 		Failed_Tracker.setActiveRecords(goalsData.map(goal0=>goal0.id));
 
@@ -64,19 +67,24 @@ async function mainNormal() {
 	}
 	//--------------------------------------------------------------
 	//----------- GLOBAL : Clean Cache -----------------------------
-	let cleanCache_res=await GLOBAL_ACTIONS.CLEAN_CACHE.func()
-	if (cleanCache_res.error){
-		errorHandler(GLOBAL_ACTIONS.CLEAN_CACHE.action, cleanCache_res.error.failed);
-		Failed_Tracker.processFailed(GLOBAL_ACTIONS.CLEAN_CACHE.action,cleanCache_res.error.failed);
-	}
-	else{
-		infoLogger.info("Cache cleaned");
+	if (totalProcessedGoals > 0) {
+		let cleanCache_res=await GLOBAL_ACTIONS.CLEAN_CACHE.func()
+		if (cleanCache_res.error){
+			errorHandler(GLOBAL_ACTIONS.CLEAN_CACHE.action, cleanCache_res.error.failed);
+			Failed_Tracker.processFailed(GLOBAL_ACTIONS.CLEAN_CACHE.action,cleanCache_res.error.failed);
+		}
+		else{
+			infoLogger.info("Cache cleaned");
+		}
+	}else{
+		infoLogger.info("No goals processed, skipping cache cleaning");
 	}
 
 
 
 	return Failed_Tracker;	
 }
+
 
 
 module.exports={mainNormal};
