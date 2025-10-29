@@ -16,7 +16,7 @@ const RETRY_FROM_ZERO_SINGLE=[BATCH_ACTIONS["GET_FROM_S3"].action,
                        BATCH_ACTIONS["DIFFUM_LOCALLY"].action,BATCH_ACTIONS["UPDATE_TO_S3"].action];
 
 
-const BATCH_SIZE=5;
+const BATCH_SIZE=10;
 
 async function retryFromZero_batch(lastCursor,Failed_Tracker){
 	let nextCursor = lastCursor;
