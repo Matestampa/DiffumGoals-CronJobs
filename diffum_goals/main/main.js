@@ -10,9 +10,8 @@ const {mainRetry} = require("./mainRetry.js");
 const {errorLogger,infoLogger} = require("../../logs/loggers.js");
 
 
-// Maintenance window (GMT-3) when normal runs are allowed if there are no failed goals
 // startHour inclusive, endHour exclusive (0-1 means 00:00:00 .. 00:59:59)
-const NORMAL_EXEC_WINDOW_GMT3 = { startHour: 0, endHour: 1 };
+const NORMAL_EXEC_WINDOW_GMT3 = { startHour: 21, endHour: 22 };
 
 //Pasa la data del json de retry por todas las condiciones y decide si es retry o normal
 function evaluate(json_retryData){
