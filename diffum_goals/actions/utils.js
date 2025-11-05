@@ -1,28 +1,3 @@
-
-
-function localDiffum(image_dataArr,diffum_color,cant_pix_xday,imageInfo){
-    let untouched_pix=get_untouchedPix(image_dataArr,diffum_color,imageInfo.channels);
-    let new_image_dataArr=image_dataArr
-
-    let lastDiffum = false;
-    if (untouched_pix.length<=cant_pix_xday){
-        cant_pix_xday=untouched_pix.length;
-        lastDiffum = true;
-    }
-
-    for (let i=0;i<cant_pix_xday;i++){
-        let rand_arrPos=get_randNum(0,untouched_pix.length-1);
-        let pixel_coords=untouched_pix[rand_arrPos];
-        changePixel(pixel_coords[0],pixel_coords[1],diffum_color,image_dataArr,imageInfo);
-        delete_arrElem(rand_arrPos,untouched_pix);
-    }
-    
-    new_image_dataArr=image_dataArr;
-    return {new_image_dataArr,lastDiffum}
-}
-
-
-
 function get_randNum(minimo,maximo){
     minimo = Math.ceil(minimo);
     maximo = Math.floor(maximo);
@@ -31,6 +6,8 @@ function get_randNum(minimo,maximo){
 }
 
 function get_untouchedPix(image_dataArr,diffum_color,channels){
+
+    
     let untouched_pix=[]
 
     for (let i=0;i<image_dataArr.length;i+=channels){
@@ -63,4 +40,4 @@ function delete_arrElem(index,arr){
 }
 
 
-module.exports={localDiffum};
+module.exports={get_randNum,get_untouchedPix,changePixel,delete_arrElem};

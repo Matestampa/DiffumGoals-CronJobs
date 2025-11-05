@@ -3,3 +3,4 @@
 .env.testProd
 /node_modules
 /logs/files
+/diffum_goals/retry_data.json
