@@ -17,6 +17,7 @@
     "@aws-sdk/client-cloudfront": "^3.888.0",
     "@aws-sdk/client-s3": "^3.685.0",
     "@aws-sdk/client-sqs": "^3.682.0",
+    "@matestampa/diffum-goals_mongoose-schemas": "^1.0.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "mongoose": "^8.8.0",
