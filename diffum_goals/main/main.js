@@ -134,7 +134,7 @@ async function main_diffumProcess(){
 	}
 
 	if (mode=="RETRY"){
-		let Failed_Tracker=await mainRetry(retry_data.failedGoals);
+		let Failed_Tracker=await mainRetry(data.failedGoals);
 
 		let failedRecords = Failed_Tracker.getFailedRecords()
 
