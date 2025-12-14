@@ -20,6 +20,3 @@ const LOG_VARS = env === "dev"
 
 
 module.exports= {LOG_VARS};
-
-
-module.exports= {LOG_VARS};

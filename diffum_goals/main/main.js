@@ -7,7 +7,7 @@ const {GLOBAL_ACTIONS}=require("../actions");
 const {mainNormal} = require("./mainNormal.js")
 const {mainRetry} = require("./mainRetry.js");
 
-const {errorLogger,infoLogger} = require("../../logs/loggers.js");
+const {errorLogger,infoLogger,infoTransport,errorTransport} = require("../../logs/loggers.js");
 
 
 // startHour inclusive, endHour exclusive (0-1 means 00:00:00 .. 00:59:59)
@@ -86,6 +86,31 @@ function evaluate(json_retryData){
 	}
 
 }
+
+
+//El logger con winston-cloudwatch queda abierto si cerramos
+//el programa directamente, por lo tanto hay que hacer flush de los logs que quedaron
+//y cerrar el logger antes de salir
+async function flushLogs_and_closeLogger(code = 0) {
+	console.log("Flushing logs...");
+
+	await new Promise((resolve) => {
+		infoTransport.kthxbye(() => {
+		console.log("CloudWatch logs flushed");
+		resolve();
+		});
+	});
+
+	await new Promise((resolve) => {
+		errorTransport.kthxbye(() => {
+		console.log("CloudWatch logs flushed");
+		resolve();
+		});
+	});
+
+	process.exit(code);
+}
+
 
 
 async function main_diffumProcess(){
@@ -171,6 +196,9 @@ async function main_diffumProcess(){
 		//Si no esta el fallido, quiere decir que fue succesfull y debemos eliminarlo del json
 		//Poner fecha en last_retryProcess
 	}
+
+	await flushLogs_and_closeLogger(0);
+
 
 }
 

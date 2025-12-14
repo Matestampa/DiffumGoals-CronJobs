@@ -17,4 +17,11 @@ const AWS_CLOUDFRONT_VARS={
     secretAccessKey:process.env.CFNT_SECRET_ACCESS_KEY
 }
 
-module.exports= {AWS_S3_VARS, AWS_CLOUDFRONT_VARS};
+const AWS_CLOUDWATCH_VARS={
+    awsAccessKeyId: process.env.CLOUDWATCH_AWS_ACCESS_KEY_ID,
+    awsSecretKey: process.env.CLOUDWATCH_AWS_SECRET_ACCESS_KEY,
+    awsRegion: process.env.CLOUDWATCH_AWS_REGION
+}
+
+
+module.exports= {AWS_S3_VARS, AWS_CLOUDFRONT_VARS, AWS_CLOUDWATCH_VARS};

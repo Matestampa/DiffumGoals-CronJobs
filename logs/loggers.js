@@ -41,6 +41,9 @@ function getErrorTransport() {
   }
 }
 
+let infoTransport = getInfoTransport();
+let errorTransport = getErrorTransport();
+
 //-------------------------- INFO LOGGER ---------------------------------------------
 const infoLogger = createLogger({
   level: "info",
@@ -57,7 +60,7 @@ const infoLogger = createLogger({
     }),
 
     //Output to local file or CloudWatch based on environment
-    getInfoTransport()
+    infoTransport
   ],
 });
 
@@ -85,11 +88,11 @@ const errorLogger = createLogger({
     }),
 
     //Output to local file or CloudWatch based on environment
-    getErrorTransport()
+    errorTransport
   ]
 });
 
 
 
 
-module.exports = {infoLogger, errorLogger};
+module.exports = {infoLogger, errorLogger,infoTransport,errorTransport};
