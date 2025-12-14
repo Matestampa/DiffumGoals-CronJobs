@@ -8,6 +8,8 @@ function errorHandler(action,failedArr) {
 	for (const {id, error} of failedArr) {
 		infoLogger.info(`Error for goalId: ${id}`);
 		errorLogger.error(error,{goalId:id,action});
+		errorLogger.error(error.message ? error.message : ".", { errorName:error.name,errorMessage:error.message, stack: error.stack,attachedError:error.attachedError,goalId:id,action:action });
+
 	}
 }
 
