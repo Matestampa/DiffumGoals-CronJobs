@@ -1,4 +1,5 @@
 const {RETRY_VARS}=require("../../config/retry_config.js");
+const {LOG_VARS}=require("../../config/logger_config.js");
 
 const {RetryData_Manager} = require("../core/classes.js");
 const {GLOBAL_ACTIONS}=require("../actions");
@@ -197,7 +198,9 @@ async function main_diffumProcess(){
 		//Poner fecha en last_retryProcess
 	}
 
-	await flushLogs_and_closeLogger(0);
+	if (!LOG_VARS.localEnv){
+		await flushLogs_and_closeLogger(0);
+	}
 
 
 }
