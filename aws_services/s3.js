@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
 
 const { AWS_S3_VARS } = require("../config/aws_config.js");
 
@@ -69,10 +69,31 @@ async function getObject(key){
     return imgByteArr;
 }
 
+async function deleteObjects(keys){
+      
+    let params={
+        Bucket:BUCKET_NAME, 
+        Delete:{
+            Objects:keys.map(key=>({Key:key})),
+            Quiet:false
+        }
+    }
 
+    let command=new DeleteObjectsCommand(params);
+    try{
+        let resp=await S3.send(command); 
+    }
+    catch(e){
+        aws_errorHandler(e,"S3");
+    };
+}
+
+
+//
 const S3_FUNCS={
     saveObject,
     getObject,
+    deleteObjects,
 }
 
 module.exports = {S3,S3_FUNCS};
