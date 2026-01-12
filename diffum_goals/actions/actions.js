@@ -1,3 +1,5 @@
+const {S3_FUNCS} = require("../../aws_services");
+
 const {get_goal_fromDb,get_Goals_FromDb_Pagination,updateMulti_Goals_2Db,
     get_ImgFile_Array,save_NewImgFile,invalidateAll_CloudfrontCache} = require("./getters_savers.js");
 
@@ -89,33 +91,22 @@ async function clean_cache(){
 
 //===================== BATCH ACTION FUNCTIONS =====================
 
-//Receives:
-//mode: "PAGINATION" , params : {nextCursor,limit}
-//mode : "ONE_BY_ID", params : {id}
-async function get_goalsFromDb(mode,params){
+//Gets goals to diffum from DB by pagination
+async function get_goalsToDiffum_db(nextCursor,limit,expiredDiffumTime){
     
-    let GENERAL_FILTER={expired:false}
-
-    if (mode==="PAGINATION"){
-        let {nextCursor,limit}=params
-
-        try{
-            let results=await get_Goals_FromDb_Pagination(nextCursor,limit,GENERAL_FILTER)
-            return {ok:results,error:undefined}
-        }
-        catch(err){
-            return {ok:undefined,error:{failed:[{id:"all",error:new MongoDB_Error("",err),retry_data:{lastCursor:nextCursor}}]}}
-        }
+    let GENERAL_FILTER={
+        expired:false,
+        last_diffumDate: { $lt: new Date(Date.now() - expiredDiffumTime) }
     }
-    else if (mode==="ONE_BY_ID"){
-        let {id}=params
-        try{
-            let result=await get_goal_fromDb(id)
-            return {ok:result,error:undefined}
-        }
-        catch(err){
-            return {ok:undefined,error:{failed:[{id:id,error:new MongoDB_Error("",err),retry_data:{}}]}}
-        }
+
+    let FIELDS=["_id","cant_pix_xday","diffum_color","s3_imgName_latest","limit_date"]
+
+    try{
+        let results=await get_Goals_FromDb_Pagination(nextCursor,limit,GENERAL_FILTER,FIELDS)
+        return {ok:results,error:undefined}
+    }
+    catch(err){
+        return {ok:undefined,error:{failed:[{id:"all",error:new MongoDB_Error("",err),retry_data:{lastCursor:nextCursor}}]}}
     }
 }
 
@@ -137,6 +128,19 @@ async function get_imgsFromS3(imgsNames){
         ok: results.length > 0 ? results : undefined,
         error: failed.length > 0 ? {failed} : undefined
     };
+}
+
+
+function get_newImgName(oldImgName){
+
+    //Generate new image name based on old one
+    let imgsParts=oldImgName.split("_");
+    let imgPartsUnchanged=imgsParts.slice(0,imgsParts.length-1).join("_");
+
+    let timestamp=Date.now();
+    let newImgName=`${imgPartsUnchanged}_${timestamp}`;
+
+    return newImgName;
 }
 
 //Receives : id,image_dataArr,diffum_color,cant_pix_xday,imageInfo (una sola)
@@ -239,14 +243,27 @@ async function update_goalsToDb(goals_data2update){
     };
 }
 
+async function delete_oldImgsFromS3(imgsNames){
+
+    try{
+        await S3_FUNCS.deleteObjects(imgsNames);
+        return {error:undefined,ok:true};
+    }
+    catch(err){
+        return {error:{failed:[{id:"all",error:new S3_Error("",err),retry_data:{imgsNames:imgsNames}}]},ok:undefined}
+    }
+}
+
 module.exports={
     connect_toDb,
     disconnect_fromDb,
-    get_goalsFromDb,
+    get_goalsToDiffum_db,
     get_imgsFromS3,
+    get_newImgName,
     diffum_locally,
     update_goalsToDb,
     update_imgsToS3,
+    delete_oldImgsFromS3,
     clean_cache
 }
 

@@ -5,7 +5,10 @@
   "scripts": {
     "start": "cross-env APP_ENV=prod NODE_ENV=production node ./index.js",
     "dev": "cross-env APP_ENV=dev NODE_ENV=development node ./index.js",
-    "testProd": "cross-env APP_ENV=testProd NODE_ENV=production node ./index.js"
+    "testProd": "cross-env APP_ENV=testProd NODE_ENV=production node ./index.js",
+    "cron_start": "cross-env APP_ENV=prod NODE_ENV=production CRON_MODE=true node ./index.js",
+    "cron_dev": "cross-env APP_ENV=dev NODE_ENV=development CRON_MODE=true node ./index.js",
+    "cron_testProd": "cross-env APP_ENV=testProd NODE_ENV=production CRON_MODE=true node ./index.js"
   },
   "author": "",
   "license": "ISC",
@@ -21,6 +24,7 @@
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "mongoose": "^8.8.0",
+    "node-cron": "^3.0.3",
     "sharp": "^0.34.2",
     "winston": "^3.17.0",
     "winston-cloudwatch": "^6.3.0"

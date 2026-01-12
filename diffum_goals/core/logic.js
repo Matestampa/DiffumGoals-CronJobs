@@ -5,33 +5,35 @@ const {errorHandler} = require("./errorHandler.js");
 //----------------- Get params to modify in DB , according to the situation ----------------
 
 //DIFFUM operation
-function get_dbDiffumOperation(){
+function get_dbDiffumOperation(newImgName){
 
-    return {last_diffumDate: new Date()}
+    return {last_diffumDate: new Date(),s3_imgName_latest: newImgName}
 }
 
 //SET_EXPIRED operation
-function get_dbSetExpiredOperation(){
+function get_dbSetExpiredOperation(newImgName){
 
-    return {expired: true,last_diffumDate: new Date()}
+    return {expired: true,last_diffumDate: new Date(),s3_imgName_latest: newImgName}
 }
 
 
 
-// Receives : [{id,cant_pix_xday,diffum_color,s3_imgName,limit_date}] , FailedTracker
+// Receives : [{id,cant_pix_xday,diffum_color,s3_imgName_latest,limit_date}] , FailedTracker
+////No need to return anything, as the FailedTracker already should have all the failed records
 async function diffumProcess(goalsData,FailedTracker){
     
     let dbData_2_update=[]
     let s3Data_2_update=[]
+    let s3_oldImgs_2delete=[]
 
     //Initiay process each goal one by one
     for (let goalData of goalsData){
         
         //--------------------------------- Get image from S3 ---------------------------------
         //-------------------------------------------------------------------------------------
-        let {id,cant_pix_xday,diffum_color,s3_imgName,limit_date}=goalData;
+        let {id,cant_pix_xday,diffum_color,s3_imgName_latest,limit_date}=goalData;
 
-        let getfromS3_resp=await BATCH_ACTIONS.GET_FROM_S3.func([{id,imgName:s3_imgName}]);
+        let getfromS3_resp=await BATCH_ACTIONS.GET_FROM_S3.func([{id,imgName:s3_imgName_latest}]);
 
         if (getfromS3_resp.error){
             errorHandler(BATCH_ACTIONS.GET_FROM_S3.action,getfromS3_resp.error.failed)
@@ -43,6 +45,10 @@ async function diffumProcess(goalsData,FailedTracker){
 
         //-------------------------------- Diffum locally -----------------------------------------
         //----------------------------------------------------------------------------------------
+
+        let s3_newImgName=BATCH_ACTIONS.GET_NEW_IMG_NAME.func(s3_imgName_latest);
+
+
         let diffumLocal_resp=await BATCH_ACTIONS.DIFFUM_LOCALLY.func(id,imgDataObj.image_dataArr,diffum_color,cant_pix_xday,imgDataObj.imageInfo);
 
         if (diffumLocal_resp.error){
@@ -54,20 +60,26 @@ async function diffumProcess(goalsData,FailedTracker){
         let {new_image_dataArr,wasLastDiffum}=diffumLocal_resp.ok;
         
         //if the last pixels are diffumed or the date is expired, the goal is set to be expired in DB
-        if (wasLastDiffum || limit_date < new Date()){
-            dbData_2_update.push({id:id,settedObject:get_dbSetExpiredOperation()})
+        if (wasLastDiffum){
+            dbData_2_update.push({id:id,settedObject:get_dbSetExpiredOperation(s3_newImgName)})
         }
         else{
-            dbData_2_update.push({id:id,settedObject:get_dbDiffumOperation()})
+            dbData_2_update.push({id:id,settedObject:get_dbDiffumOperation(s3_newImgName)})
         }
 
         //Prepare data to update in S3
         s3Data_2_update.push({
                 id:id,
-                imgName:s3_imgName,
+                imgName: s3_newImgName,
                 pixelArr:new_image_dataArr,
                 imageInfo:imgDataObj.imageInfo,
        })
+
+        //Prepare old image name to delete from S3 later
+        s3_oldImgs_2delete.push({
+            id:id,
+            imgName:s3_imgName_latest
+        });
 
 
     }
@@ -96,7 +108,23 @@ async function diffumProcess(goalsData,FailedTracker){
         FailedTracker.processFailed(BATCH_ACTIONS.UPDATE_TO_DB.action,updateToDb_resp.error.failed)
     }
 
-    //No need to return anything, as the FailedTracker already should have all the failed records
+    //-------------------------- Delete the old images --------------------------------------------
+    //--------------------------------------------------------------------------------------------
+    stillActive=FailedTracker.getActiveRecords(); //get array of still active ids in case some failed in DB update
+    
+    let s3_oldImgs_filtered=s3_oldImgs_2delete.filter(oldImg=> stillActive.find(activeRec=> activeRec.id==oldImg.id) ).map(oldImg => oldImg.imgName);
+
+    console.log("Deleting old images from S3:",s3_oldImgs_filtered);
+
+    let deleteOldImgs_resp=await BATCH_ACTIONS.DELETE_OLD_IMGS_FROM_S3.func(s3_oldImgs_filtered);
+
+    if (deleteOldImgs_resp.error){
+        errorHandler(BATCH_ACTIONS.DELETE_OLD_IMGS_FROM_S3.action,deleteOldImgs_resp.error.failed)
+        
+        //Dont call the failed tracker because we dont consider a failure to delete old images as critical
+        //It can be deleted later with another process
+        //FailedTracker.processFailed(BATCH_ACTIONS.DELETE_OLD_IMGS_FROM_S3.action,deleteOldImgs_resp.error.failed)
+    }
 
 }
 
