@@ -29,7 +29,7 @@ async function get_goal_fromDb(id){
 
 
 //Gets goals from DB with cursor pagination
-async function get_Goals_FromDb_Pagination(lastId = null, limit = 10, filter = {}){
+async function get_Goals_FromDb_Pagination(lastId = null, limit = 10, filter = {}, fields = ["_id"]){
 
     // Build the query - if lastId is provided, find documents with _id greater than lastId
     let query = { ...filter };
@@ -37,9 +37,12 @@ async function get_Goals_FromDb_Pagination(lastId = null, limit = 10, filter = {
         query._id = { $gt: lastId };
     }
     
+    // Convert fields array to string for MongoDB select
+    const fieldsString = fields.join(' ');
+    
     const docs = await GoalModel
         .find(query)
-        .select("cant_pix_xday diffum_color s3_imgName limit_date")
+        .select(fieldsString)
         .sort({ _id: 1 }) // Sort by _id ascending for consistent pagination
         .limit(limit);
     
@@ -49,13 +52,16 @@ async function get_Goals_FromDb_Pagination(lastId = null, limit = 10, filter = {
     // Get the last ID for the next page
     const nextCursor = docs.length > 0 ? docs[docs.length - 1]._id : null;
     
-    const results = docs.map(doc => ({
-        id: doc._id,
-        cant_pix_xday: doc.cant_pix_xday,
-        diffum_color: doc.diffum_color,
-        s3_imgName: doc.s3_imgName,
-        limit_date: doc.limit_date
-    }));
+    // Create result objects dynamically based on fields array
+    const results = docs.map(doc => {
+        const result = { id: doc._id };
+        fields.forEach(field => {
+            if (doc[field] !== undefined) {
+                result[field] = doc[field];
+            }
+        });
+        return result;
+    });
     
     return {
         data: results,
