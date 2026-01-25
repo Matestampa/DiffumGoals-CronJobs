@@ -5,19 +5,20 @@ function get_randNum(minimo,maximo){
     return Math.floor(Math.random() * (maximo - minimo + 1)) + minimo;
 }
 
-function get_untouchedPix(image_dataArr,diffum_color,channels){
+function get_untouchedPix(image_dataArr,diffum_color,channels,width){
 
     
     let untouched_pix=[]
 
     for (let i=0;i<image_dataArr.length;i+=channels){
         pixelColor=image_dataArr.slice(i,i+channels);
-        if (pixelColor[0]===diffum_color[0] && pixelColor[1]===diffum_color[1] && pixelColor[2]===diffum_color[2]){
-            let a=1
-        }
-        else{
-            let x=Math.floor(i/channels % 100); // Assuming width is 100
-            let y=Math.floor(i/channels / 100);
+        
+        // Check if pixel is NOT transparent (alpha > 0)
+        let isTransparent = channels === 4 && pixelColor[3] === 0;
+        
+        if (!isTransparent){
+            let x=Math.floor(i/channels % width);
+            let y=Math.floor(i/channels / width);
             untouched_pix.push([x,y]);
         }
 
@@ -33,6 +34,11 @@ function changePixel(x,y,new_color,imgArr,imgInfo){
     imgArr[indice] = new_color[0];
     imgArr[indice + 1] = new_color[1];
     imgArr[indice + 2] = new_color[2];
+
+    // Si hay canal alpha (RGBA) y se proporciona en new_color, modificarlo
+    if (imgInfo.channels === 4) {
+        imgArr[indice + 3] = new_color[3] !== undefined ? new_color[3] : 255;
+    }
 }
 
 function delete_arrElem(index,arr){

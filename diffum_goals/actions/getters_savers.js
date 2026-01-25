@@ -104,7 +104,7 @@ async function get_ImgFile_Array(imgName){
     
     let imgByteArr=await S3_FUNCS.getObject(imgName);
 
-    let {data,info}=await sharp(imgByteArr).raw().toBuffer({resolveWithObject:true});
+    let {data,info}=await sharp(imgByteArr).ensureAlpha().raw().toBuffer({resolveWithObject:true});
 
     return {image_dataArr:data,imageInfo:info};
 }

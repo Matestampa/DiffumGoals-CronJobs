@@ -21,6 +21,8 @@ function get_dbSetExpiredOperation(newImgName){
 // Receives : [{id,cant_pix_xday,diffum_color,s3_imgName_latest,limit_date}] , FailedTracker
 ////No need to return anything, as the FailedTracker already should have all the failed records
 async function diffumProcess(goalsData,FailedTracker){
+
+    const DIFFUM_COLOR=[0,0,0,0]; //Color to set diffumed pixels (transparent)
     
     let dbData_2_update=[]
     let s3Data_2_update=[]
@@ -31,7 +33,7 @@ async function diffumProcess(goalsData,FailedTracker){
         
         //--------------------------------- Get image from S3 ---------------------------------
         //-------------------------------------------------------------------------------------
-        let {id,cant_pix_xday,diffum_color,s3_imgName_latest,limit_date}=goalData;
+        let {id,cant_pix_xday,s3_imgName_latest,limit_date}=goalData;
 
         let getfromS3_resp=await BATCH_ACTIONS.GET_FROM_S3.func([{id,imgName:s3_imgName_latest}]);
 
@@ -49,7 +51,7 @@ async function diffumProcess(goalsData,FailedTracker){
         let s3_newImgName=BATCH_ACTIONS.GET_NEW_IMG_NAME.func(s3_imgName_latest);
 
 
-        let diffumLocal_resp=await BATCH_ACTIONS.DIFFUM_LOCALLY.func(id,imgDataObj.image_dataArr,diffum_color,cant_pix_xday,imgDataObj.imageInfo);
+        let diffumLocal_resp=await BATCH_ACTIONS.DIFFUM_LOCALLY.func(id,imgDataObj.image_dataArr,DIFFUM_COLOR,cant_pix_xday,imgDataObj.imageInfo);
 
         if (diffumLocal_resp.error){
             errorHandler(BATCH_ACTIONS.DIFFUM_LOCALLY.action,[diffumLocal_resp.error.failed])
