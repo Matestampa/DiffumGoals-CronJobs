@@ -99,7 +99,7 @@ async function get_goalsToDiffum_db(nextCursor,limit,expiredDiffumTime){
         last_diffumDate: { $lt: new Date(Date.now() - expiredDiffumTime) }
     }
 
-    let FIELDS=["_id","cant_pix_xday","diffum_color","s3_imgName_latest","limit_date"]
+    let FIELDS=["_id","cant_pix_xday","s3_imgName_latest","limit_date"]
 
     try{
         let results=await get_Goals_FromDb_Pagination(nextCursor,limit,GENERAL_FILTER,FIELDS)
@@ -145,12 +145,12 @@ function get_newImgName(oldImgName){
 
 //Receives : id,image_dataArr,diffum_color,cant_pix_xday,imageInfo (una sola)
 async function diffum_locally(id,image_dataArr,diffum_color,cant_pix_xday,imageInfo){
-    
+
     let new_image_dataArr=[]
     let wasLastDiffum = false;
     
     try{
-        let untouched_pix=get_untouchedPix(image_dataArr,diffum_color,imageInfo.channels);
+        let untouched_pix=get_untouchedPix(image_dataArr,diffum_color,imageInfo.channels,imageInfo.width);
     
         new_image_dataArr=image_dataArr
         
@@ -158,6 +158,7 @@ async function diffum_locally(id,image_dataArr,diffum_color,cant_pix_xday,imageI
             cant_pix_xday=untouched_pix.length;
             wasLastDiffum = true;
         }
+
 
         for (let i=0;i<cant_pix_xday;i++){
             let rand_arrPos=get_randNum(0,untouched_pix.length-1);
