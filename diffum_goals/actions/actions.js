@@ -96,6 +96,7 @@ async function get_goalsToDiffum_db(nextCursor,limit,expiredDiffumTime){
     
     let GENERAL_FILTER={
         expired:false,
+        completed:false,
         last_diffumDate: { $lt: new Date(Date.now() - expiredDiffumTime) }
     }
 
